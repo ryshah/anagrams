@@ -1,0 +1,25 @@
+service:
+  name: anagrams
+
+log:
+  debug: false
+
+dictionary:
+  files: [./data/french.txt, ./data/english.txt]
+
+lru_cache:
+  capacity: 100
+
+server:
+  port: :8080
+
+client:
+  concurrent_requests: 100
+  test_words:
+  - dear
+  - read
+  - test
+  - écart
+  - hello
+  - raécs 
+  - otrpe
