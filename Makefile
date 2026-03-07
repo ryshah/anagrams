@@ -12,11 +12,8 @@ help:
 	@echo "  make run-server   - Run REST API server"
 	@echo "  make run-client   - Run concurrent client"
 	@echo "  make test         - Run unit tests"
-	@echo "  make fmt          - Format Go code"
-	@echo "  make lint         - Run Go vet"
 	@echo "  make deps         - Download dependencies"
 	@echo "  make clean        - Remove build artifacts"
-	@echo "  make load-test    - Run client load test"
 
 deps:
 	go mod tidy
@@ -35,14 +32,5 @@ run-client:
 test:
 	go test -v ./...
 
-fmt:
-	go fmt ./...
-
-lint:
-	go vet ./...
-
 clean:
 	rm -rf bin
-
-load-test:
-	go run ./$(CLIENT_DIR) --config $(CONFIG)

@@ -13,6 +13,7 @@ import (
 
 type AnagramFinder struct {
 	anagramMap map[string]map[string]struct{}
+	loaded     bool
 }
 
 // runeEncoding returns a deterministic encoding of rune frequencies
