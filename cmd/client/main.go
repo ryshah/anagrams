@@ -3,55 +3,47 @@ package main
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
-	"os"
-	"strconv"
 	"sync"
+
+	"github.com/ryshah/anagrams/pkg/config"
 )
+
+var cfg config.Config
 
 func worker(id int, word string, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
 	url := fmt.Sprintf(
-		"http://localhost:8081/v1/anagrams?word=%s",
-		word,
+		"http://localhost%s/v1/anagrams?word=%s",
+		cfg.Server.Port, word,
 	)
 
 	resp, err := http.Get(url)
-
-	if err != nil {
-		fmt.Println("request error:", err)
-		return
+	if err == nil {
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode != 200 {
+			slog.Error("Request error: " + string(body))
+		} else {
+			slog.Info("Anagrams found for " + word)
+			if cfg.Log.Debug {
+				slog.Info(word + " => " + string(body))
+			}
+		}
 	}
 
-	body, _ := io.ReadAll(resp.Body)
-
-	resp.Body.Close()
-
-	fmt.Printf("worker %d -> %s\n", id, body)
 }
 
+// A simple client that simulates multiple requests to the running server
+// it iterates through fixed set of words specified in dictionary
 func main() {
-
-	words := []string{
-		"read", "trace", "écart", "dear",
-	}
-
-	programArgs := os.Args[1:]
-	var requests int = 20
-	if len(programArgs) == 1 {
-		i, err := strconv.Atoi(programArgs[0])
-
-		if err != nil {
-			fmt.Printf("First argument should be a number, default to 20")
-		}
-		requests = i
-	}
-
+	cfg = *config.Load()
+	words := cfg.Client.TestWords
 	var wg sync.WaitGroup
-
-	for i := 0; i < requests; i++ {
+	for i := 0; i < cfg.Client.ConcurrentRequests; i++ {
 
 		wg.Add(1)
 

@@ -1,36 +1,29 @@
----
 service:
   name: anagrams
-  version: 1.0
+
+log:
+  debug: true
 
 locale:
   language: fr
   normalize_unicode: true
-  case_sensitive: false
-  remove_diacritics: false
 
 dictionary:
-  file: ./data/french.txt
-  preload: true
-
-server:
-  host: localhost
-  port: 8080
-  read_timeout_ms: 5000
-  write_timeout_ms: 5000
+  files: [./data/french.txt, ./data/english.txt]
 
 lru_cache:
-  enabled: true
-  capacity: 1000
-  ttl_seconds: 120
+  capacity: 10
+
+server:
+  port: :8082
 
 client:
-  enabled: true
-  concurrent_requests: 50
-  total_requests: 1000
-  request_timeout_ms: 2000
-
-performance:
-  enable_metrics: true
-  enable_profiling: false
-  worker_threads: 8
+  concurrent_requests: 10
+  test_words:
+  - dear
+  - read
+  - test
+  - écart
+  - hello
+  - raécs 
+  - otrpe

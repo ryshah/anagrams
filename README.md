@@ -45,6 +45,22 @@ The system is designed to be **simple, extensible, and interview-friendly** whil
                  | REST Server   |
                  | /v1/anagrams  |
                  +---------------+
+                         |
+                         v
+                 +----------------+
+                 | Auth Middleware|
+                 +----------------+
+                         |
+                         v
+                 +-------------------+
+                 | Metrics Middleware|
+                 +-------------------+
+                         |
+                         v
+                 +---------------+
+                 | Client Request|
+                 +---------------+
+
 ```
 
 ---
@@ -57,21 +73,29 @@ anagrams/
 ├── cmd/
 │   ├── server/           # REST API server
 │   │   └── main.go
+│   │   └── main_teset.go
 │   │
 │   └── client/           # Concurrent load test client
 │       └── main.go
 │
 ├── pkg/
-│   ├── anagram/          # Core anagram logic
-│   │   ├── finder.go
-│   │   └── finder_test.go
+│   ├── service/          # Core services
+│   │   ├── anagrams.go
+│   │   └── anagrams_test.go
 │   │
 │   ├── cache/            # LRU cache implementation
 │   │   ├── lru.go
 │   │   └── lru_test.go
 │   │
-│   └── config/           # Config loader
-│       └── config.go
+│   |── config/           # Config loader
+│   |    └── config.go
+│   |    └── config_test.go
+│   │
+│   |── middleware/           # Middlewares 
+│   |    └── auth.go
+│   |    └── auth_test.go
+│   |    └── metrics.go
+│   |    └── metrics_test.go
 │
 ├── data/
 │   └── english.txt
@@ -79,6 +103,7 @@ anagrams/
 │
 ├── config.yaml
 ├── go.mod
+├── Makefile.                # Build various services, run tests, etc
 └── README.md
 ```
 
@@ -144,7 +169,7 @@ Client Request
   |      |
  HIT    MISS
   |      |
-Return  Lookup Map
+Return  Anagram Service
          |
          v
        Cache
