@@ -195,6 +195,8 @@ Returns the Prometheus HTTP metrics for endpoints
 
 # Future Enhancements and Production Considerations
 
+* **Updating Dictionary** - If dictionary updates become frequent, a canary deployment approach would be preferable to updating the current deployment directly, allowing the new dictionary version to be validated before gradually replacing the existing service.
+
 * **Distributed caching** – Introduce Redis or Memcached to share cached anagram results across multiple service instances and improve performance in horizontally scaled deployments.
 
 * **Optimized anagram encoding** – Replace the current sorted-character key generation (O(N log N)) with a character frequency encoding (O(N)) to reduce preprocessing time for large dictionaries (1M+ entries).
@@ -209,3 +211,20 @@ Returns the Prometheus HTTP metrics for endpoints
 
 * **Enhanced observability** – Expand metrics collection and integrate with Prometheus/Grafana dashboards and alerting for improved operational visibility.
 
+* **Updating Dictionary** - The feature should be added if there are frequent updates. Instead of updating current deployment, I would recommend canary deployment of newer version and then rolling out old dictionary services.
+
+---
+
+# AI Usage
+
+**Tool**
+- ChatGPT
+
+**Usage**
+- Limited scaffolding and boilerplate generation. The core logic, architecture, and final implementation were written and verified manually.
+- Initial README generation
+- I18N enablement enhancements
+- Setting up Makefile and Docker files 
+
+**Verification**
+- All generated code was reviewed, debugged, and integrated by me to ensure functionality.
