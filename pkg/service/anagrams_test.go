@@ -1,3 +1,6 @@
+// Package service provides unit tests for the anagram finding service.
+// Tests cover string sorting, Unicode normalization, dictionary loading,
+// and anagram lookup functionality.
 package service
 
 import (
@@ -7,6 +10,14 @@ import (
 	"github.com/ryshah/anagrams/pkg/config"
 )
 
+// TestSortedString verifies that the sortedString function correctly
+// sorts characters in a word alphabetically.
+//
+// Test scenario:
+//   - Input: "read"
+//   - Expected output: "ader"
+//
+// This is the foundation of the anagram detection algorithm.
 func TestSortedString(t *testing.T) {
 
 	result := sortedString("read")
@@ -17,6 +28,14 @@ func TestSortedString(t *testing.T) {
 	}
 }
 
+// TestSortedStringAnagramsMatch verifies that anagrams produce the same
+// sorted string, which is the key to anagram detection.
+//
+// Test scenario:
+//   - Sorts "read" and "dear"
+//   - Verifies both produce the same sorted result
+//
+// This confirms that anagrams can be identified by comparing sorted strings.
 func TestSortedStringAnagramsMatch(t *testing.T) {
 
 	a := sortedString("read")
@@ -27,6 +46,14 @@ func TestSortedStringAnagramsMatch(t *testing.T) {
 	}
 }
 
+// TestRuneEncoding verifies the alternative rune encoding approach
+// for anagram detection.
+//
+// Test scenario:
+//   - Encodes "read" and "dear"
+//   - Verifies both produce the same encoding
+//
+// This tests an alternative algorithm (not currently used in production).
 func TestRuneEncoding(t *testing.T) {
 
 	a := runeEncoding("read")
@@ -37,6 +64,14 @@ func TestRuneEncoding(t *testing.T) {
 	}
 }
 
+// TestRuneEncodingDifferentWords verifies that non-anagrams produce
+// different rune encodings.
+//
+// Test scenario:
+//   - Encodes "read" and "book"
+//   - Verifies they produce different encodings
+//
+// This ensures the encoding algorithm can distinguish non-anagrams.
 func TestRuneEncodingDifferentWords(t *testing.T) {
 
 	a := runeEncoding("read")
@@ -47,10 +82,19 @@ func TestRuneEncodingDifferentWords(t *testing.T) {
 	}
 }
 
+// TestLoadDictionaryAndLookup verifies the complete dictionary loading
+// and anagram lookup workflow.
+//
+// Test scenario:
+//  1. Creates a temporary dictionary file with test words
+//  2. Loads the dictionary into an AnagramFinder
+//  3. Verifies that anagrams are correctly grouped together
+//
+// This is an integration test covering the full anagram finding process.
 func TestLoadDictionaryAndLookup(t *testing.T) {
 
-	// create temporary dictionary file
-	cfg := config.Load()
+	// Create temporary dictionary file with test data
+	cfg, _ := config.Load()
 	content := "read\ndear\ndare\nhello\n"
 	file, err := os.CreateTemp("", "dict")
 
@@ -58,13 +102,17 @@ func TestLoadDictionaryAndLookup(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Remove(file.Name())
-	cfg.Dictionary.Files = append(cfg.Dictionary.Files, file.Name())
+	// Replace the dictionary files list with only our test file
+	cfg.Dictionary.Files = []string{file.Name()}
 
 	file.WriteString(content)
 	file.Close()
 	finder := NewAnagramFinder()
 
-	finder.LoadDictionary()
+	err = finder.LoadDictionary()
+	if err != nil {
+		t.Fatalf("failed to load dictionary: %v", err)
+	}
 
 	key := sortedString("read")
 
@@ -75,8 +123,17 @@ func TestLoadDictionaryAndLookup(t *testing.T) {
 	}
 }
 
+// TestNoAnagramsFound verifies that the service correctly handles
+// queries for words that have no anagrams in the dictionary.
+//
+// Test scenario:
+//  1. Creates a dictionary with limited words
+//  2. Searches for a word not in the dictionary
+//  3. Verifies that no anagrams are found
+//
+// This ensures the service handles "not found" cases gracefully.
 func TestNoAnagramsFound(t *testing.T) {
-	cfg := config.Load()
+	cfg, _ := config.Load()
 	content := "read\ndear\n"
 	file, err := os.CreateTemp("", "dict")
 	if err != nil {
@@ -86,10 +143,14 @@ func TestNoAnagramsFound(t *testing.T) {
 
 	file.WriteString(content)
 	file.Close()
-	cfg.Dictionary.Files = append(cfg.Dictionary.Files, file.Name())
+	// Replace the dictionary files list with only our test file
+	cfg.Dictionary.Files = []string{file.Name()}
 	finder := NewAnagramFinder()
 
-	finder.LoadDictionary()
+	err = finder.LoadDictionary()
+	if err != nil {
+		t.Fatalf("failed to load dictionary: %v", err)
+	}
 
 	key := sortedString("xyz")
 
@@ -100,12 +161,21 @@ func TestNoAnagramsFound(t *testing.T) {
 	}
 }
 
+// TestNormalizeInput_ComposedVsDecomposed verifies that Unicode normalization
+// correctly handles composed vs decomposed character representations.
+//
+// Test scenario:
+//   - "é" as a single composed character
+//   - "é" as "e" + combining accent (decomposed)
+//   - Verifies both normalize to the same result
+//
+// This is critical for international character support (French, Spanish, etc.).
 func TestNormalizeInput_ComposedVsDecomposed(t *testing.T) {
 
-	// "é" composed
+	// "é" as a single composed character
 	composed := "écart"
 
-	// "é" decomposed (e + accent)
+	// "é" as decomposed form (e + combining accent)
 	decomposed := "e\u0301cart"
 
 	n1 := normalizeInput(composed)
@@ -116,6 +186,14 @@ func TestNormalizeInput_ComposedVsDecomposed(t *testing.T) {
 	}
 }
 
+// TestNormalizeInput_LowercaseUnicode verifies that normalization
+// correctly converts Unicode characters to lowercase.
+//
+// Test scenario:
+//   - Input: "ÉCOLE" (uppercase with accent)
+//   - Expected: "école" (lowercase with accent)
+//
+// This ensures case-insensitive anagram matching for international characters.
 func TestNormalizeInput_LowercaseUnicode(t *testing.T) {
 
 	input := "ÉCOLE"
@@ -128,6 +206,14 @@ func TestNormalizeInput_LowercaseUnicode(t *testing.T) {
 	}
 }
 
+// TestSortedString_FrenchAnagram verifies that the sorting algorithm
+// works correctly with French words containing accented characters.
+//
+// Test scenario:
+//   - Sorts "écart" and "tracé" (French anagrams)
+//   - Verifies they produce the same sorted result
+//
+// This confirms international character support in the core algorithm.
 func TestSortedString_FrenchAnagram(t *testing.T) {
 
 	a := sortedString("écart")
@@ -138,6 +224,14 @@ func TestSortedString_FrenchAnagram(t *testing.T) {
 	}
 }
 
+// TestSortedString_RuneSorting verifies that runes (Unicode characters)
+// are sorted correctly, not just ASCII bytes.
+//
+// Test scenario:
+//   - Input: "çba" (contains cedilla)
+//   - Expected: "abç" (sorted by Unicode code point)
+//
+// This ensures proper Unicode handling in the sorting algorithm.
 func TestSortedString_RuneSorting(t *testing.T) {
 
 	input := "çba"

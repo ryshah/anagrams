@@ -1,3 +1,5 @@
+// Package middleware provides unit tests for Prometheus metrics collection middleware.
+// Tests verify that HTTP requests are properly tracked with counters and histograms.
 package middleware
 
 import (
@@ -8,6 +10,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
+// TestMetricsMiddlewareRecordsRequest verifies that the metrics middleware
+// successfully records HTTP requests in the Prometheus counter.
+//
+// Test scenario:
+//  1. Creates a handler wrapped with Metrics middleware
+//  2. Simulates a GET request to /v1/anagrams
+//  3. Verifies the request completes with HTTP 200 OK
+//  4. Checks that at least one metric was recorded
+//
+// This ensures the request counter is working correctly.
 func TestMetricsMiddlewareRecordsRequest(t *testing.T) {
 
 	handler := Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +42,17 @@ func TestMetricsMiddlewareRecordsRequest(t *testing.T) {
 	}
 }
 
+// TestMetricsMiddlewareStatusCode verifies that the metrics middleware
+// correctly captures and records error status codes.
+//
+// Test scenario:
+//  1. Creates a handler that returns HTTP 500 Internal Server Error
+//  2. Wraps it with Metrics middleware
+//  3. Simulates a request
+//  4. Verifies the error status is returned
+//  5. Checks that the metric was recorded with the error status
+//
+// This ensures error responses are properly tracked in metrics.
 func TestMetricsMiddlewareStatusCode(t *testing.T) {
 
 	handler := Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +75,16 @@ func TestMetricsMiddlewareStatusCode(t *testing.T) {
 	}
 }
 
+// TestMetricsMiddlewareLatencyMetric verifies that the metrics middleware
+// records request latency in the Prometheus histogram.
+//
+// Test scenario:
+//  1. Creates a handler wrapped with Metrics middleware
+//  2. Simulates a request
+//  3. Verifies that latency metrics were recorded
+//
+// This ensures request duration tracking is working correctly for
+// performance monitoring and SLA tracking.
 func TestMetricsMiddlewareLatencyMetric(t *testing.T) {
 
 	handler := Metrics(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
